@@ -2,6 +2,7 @@ package com.guy.class23b_ands_2;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.Manifest;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -25,6 +26,9 @@ public class Activity_Panel extends AppCompatActivity {
         panel_BTN_start.setOnClickListener(v -> start());
         panel_BTN_stop.setOnClickListener(v -> stop());
 
+
+        panel_BTN_stop.setVisibility(View.VISIBLE    );
+        requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 104);
 
     }
 
