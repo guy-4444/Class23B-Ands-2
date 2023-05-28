@@ -25,8 +25,8 @@ public class ReminderReceiver extends BroadcastReceiver {
         if (checkToActivateReminder(context)) {
             // context.startActivity(new Intent(context, Activity_Panel.class));
             // actionToService(context, LocationService.START_FOREGROUND_SERVICE);
-        }
             createNotification(context);
+        }
     }
 
     private boolean checkToActivateReminder(Context context) {
