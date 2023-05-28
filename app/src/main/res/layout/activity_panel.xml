@@ -13,6 +13,11 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/panel_LBL_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            />
         <com.google.android.material.button.MaterialButton
             android:id="@+id/panel_BTN_start"
             android:layout_width="wrap_content"

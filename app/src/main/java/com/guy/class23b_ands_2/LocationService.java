@@ -3,6 +3,7 @@ package com.guy.class23b_ands_2;
 import static com.google.android.gms.location.LocationServices.getFusedLocationProviderClient;
 
 import android.annotation.TargetApi;
+import android.app.ActivityManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -14,7 +15,6 @@ import android.content.pm.PackageManager;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Build;
-import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.PowerManager;
@@ -25,6 +25,7 @@ import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationAvailability;
@@ -35,11 +36,17 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.gson.Gson;
 
 import java.text.SimpleDateFormat;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class LocationService extends Service {
+
+    public static final String BROADCAST_NEW_LOCATION_100FM = "BROADCAST_NEW_LOCATION_100FM";
+    public static final String BROADCAST_NEW_LOCATION_EXTRA_KEY = "BROADCAST_NEW_LOCATION_EXTRA_KEY";
+
 
     public static final String START_FOREGROUND_SERVICE = "START_FOREGROUND_SERVICE";
     public static final String STOP_FOREGROUND_SERVICE = "STOP_FOREGROUND_SERVICE";
@@ -136,11 +143,7 @@ public class LocationService extends Service {
             super.onLocationResult(locationResult);
 
             if (locationResult.getLastLocation() != null) {
-                Log.d("pttt", ":getLastLocation");
-                String str = new SimpleDateFormat("hh:mm:ss").format(System.currentTimeMillis());
-                str = locationResult.getLastLocation().getLatitude() + "\n" + locationResult.getLastLocation().getLongitude() + " - " + str;
-                updateNotification(str);
-
+                newLocationDetect(locationResult);
             } else {
                 Log.d("pttt", "Location information isn't available.");
             }
@@ -151,6 +154,24 @@ public class LocationService extends Service {
             super.onLocationAvailability(locationAvailability);
         }
     };
+
+    private void newLocationDetect(LocationResult locationResult) {
+        Log.d("pttt", ":getLastLocation");
+        double lat = locationResult.getLastLocation().getLatitude();
+        double lon = locationResult.getLastLocation().getLongitude();
+        double spd = locationResult.getLastLocation().getSpeed() * 3.6;
+        double bearing = locationResult.getLastLocation().getBearing();
+
+        String str = new SimpleDateFormat("hh:mm:ss").format(System.currentTimeMillis());
+        str += "\n" + spd + "km/h";
+        updateNotification(str);
+
+        MyLoc myLoc = new MyLoc(lat, lon, spd, bearing);
+        Intent intent = new Intent(BROADCAST_NEW_LOCATION_100FM);
+        String json = new Gson().toJson(myLoc);
+        intent.putExtra(BROADCAST_NEW_LOCATION_EXTRA_KEY, json);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+    }
 
     private void stopRecording() {
         // Release CPU Holding
@@ -179,6 +200,16 @@ public class LocationService extends Service {
         }
     }
 
+    public static boolean isMyServiceRunning(Context context) {
+        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RunningServiceInfo> runs = manager.getRunningServices(Integer.MAX_VALUE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (LocationService.class.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     @Nullable
     @Override
@@ -260,4 +291,6 @@ public class LocationService extends Service {
         final NotificationManager notificationManager = (NotificationManager) getSystemService(Service.NOTIFICATION_SERVICE);
         notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
     }
+
+
 }
